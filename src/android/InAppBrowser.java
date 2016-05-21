@@ -26,6 +26,7 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.net.http.SslError;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.InputType;
@@ -45,6 +46,7 @@ import android.webkit.HttpAuthHandler;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.webkit.SslErrorHandler;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -87,6 +89,7 @@ public class InAppBrowser extends CordovaPlugin {
     private static final String CLEAR_SESSION_CACHE = "clearsessioncache";
     private static final String HARDWARE_BACK_BUTTON = "hardwareback";
     private static final String MEDIA_PLAYBACK_REQUIRES_USER_ACTION = "mediaPlaybackRequiresUserAction";
+    private static final String BADSSL = "badssl";
 
     private InAppBrowserDialog dialog;
     private WebView inAppWebView;
@@ -99,6 +102,7 @@ public class InAppBrowser extends CordovaPlugin {
     private boolean clearSessionCache = false;
     private boolean hadwareBackButton = true;
     private boolean mediaPlaybackRequiresUserGesture = false;
+	private boolean allowAllBadSSL = false;
 
     /**
      * Executes the request and returns PluginResult.
@@ -483,6 +487,10 @@ public class InAppBrowser extends CordovaPlugin {
             if (show != null) {
                 showLocationBar = show.booleanValue();
             }
+		Boolean badSSL = features.get(BADSSL);
+		if(badSSL!=null){
+			allowAllBadSSL = badSSL.booleanValue();
+		}
             Boolean zoom = features.get(ZOOM);
             if (zoom != null) {
                 showZoomControls = zoom.booleanValue();
@@ -654,8 +662,16 @@ public class InAppBrowser extends CordovaPlugin {
                 inAppWebView = new WebView(cordova.getActivity());
                 inAppWebView.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
                 inAppWebView.setId(Integer.valueOf(6));
-                inAppWebView.setWebChromeClient(new InAppChromeClient(thatWebView));
-                WebViewClient client = new InAppBrowserClient(thatWebView, edittext);
+		WebViewClient client = null;
+                if(allowAllBadSSL == true){
+			Log.d(LOG_TAG, "!@#$% -- BEWARE!!!! YOU ARE IN DEV MODE ALLOWING ALL BAD SSL CERTIFICATES ------ !@#$%");
+			client = new BadSSLWebViewClient();
+
+		}
+		else {
+			inAppWebView.setWebChromeClient(new InAppChromeClient(thatWebView));
+			client = new InAppBrowserClient(thatWebView, edittext);
+		}	
                 inAppWebView.setWebViewClient(client);
                 WebSettings settings = inAppWebView.getSettings();
                 settings.setJavaScriptEnabled(true);
@@ -953,5 +969,22 @@ public class InAppBrowser extends CordovaPlugin {
             // By default handle 401 like we'd normally do!
             super.onReceivedHttpAuthRequest(view, handler, host, realm);
         }
+    }
+	 private class BadSSLWebViewClient extends WebViewClient {
+    	
+        @Override
+        public boolean shouldOverrideUrlLoading(WebView view, String url) {
+        	view.loadUrl(url);
+            return false; // then it is not handled by default action
+        }
+
+	@Override
+        public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
+	            handler.proceed();
+	
+        }
+
+		 
+		 
     }
 }

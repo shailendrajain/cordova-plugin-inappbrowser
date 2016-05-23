@@ -27,9 +27,9 @@ Test environment / Stage / Prepod environment which has self signed or broken ce
 
 [![Build Status](https://github.com/shailendrajain/cordova-plugin-inappbrowser.svg?branch=master)](https://github.com/shailendrajain/cordova-plugin-inappbrowser)
 
-# cordova-plugin-inappbrowser
+# cordova-plugin-inappbrowser (By Pass SSL Errors)
 
-#Refer the Original document of cordova-plugin-inappbrowser. Behaviour of this plugin is similar to original plugin.
+Refer the Original document of cordova-plugin-inappbrowser. Behaviour of this plugin is similar to original plugin.
 For now feature of bypassing SSL error is available only on Android Platform. 
 
 #Instruction to integrate the Plugin from local path 
